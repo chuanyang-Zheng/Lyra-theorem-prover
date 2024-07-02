@@ -1173,7 +1173,7 @@ def a_list_problem_interact(
         a_single_problem_interact(problem_rank[0], file_name, args[0])
         gc.collect()
 
-def init_isa_env(sketch_dir, rank, cache_dir="/home/shihan/chuanyang/cache/",postprocess=True):
+def init_isa_env(sketch_dir, rank, cache_dir="/home/chuanyang/cache/",postprocess=True):
     interactive_dir = os.path.join(sketch_dir, "interactive")
     os.makedirs(interactive_dir, exist_ok=True)
 
