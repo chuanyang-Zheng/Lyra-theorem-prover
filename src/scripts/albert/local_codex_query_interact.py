@@ -6,7 +6,7 @@ import argparse
 import submitit
 from tqdm import tqdm
 
-from autoformalization.utils import get_the_type, get_a_single_sample, a_list_of_jobs, ROOTDIR
+from autoformalization.utils import get_the_type, get_a_single_sample, a_list_of_jobs, ROOTDIR, a_single_problem_interact
 
 def list_file_name(directory):
     onlyfiles = [f.split(".")[0] for f in os.listdir(directory) if os.path.isfile(os.path.join(directory, f))]
@@ -79,8 +79,8 @@ if __name__ == "__main__":
     parser.add_argument("--temperature", type=float, default=0.7)
     parser.add_argument("--n_examples", type=int, default=3, help="number of prompt examples")
     parser.add_argument("--prompts_type", type=str, default="default")
-    parser.add_argument("--n_attempts", type=int, default=50)
-    parser.add_argument("--chunk_size", type=int, default=610)
+    parser.add_argument("--n_attempts", type=int, default=100)
+    parser.add_argument("--chunk_size", type=int, default=1)
     parser.add_argument("--omit_informal_statement", action="store_true", default=False)
     parser.add_argument("--omit_informal_proof", action="store_true", default=False)
     parser.add_argument("--omit_formal", action="store_true", default=False)
@@ -146,6 +146,7 @@ if __name__ == "__main__":
                     }
 
     print(len(name_to_info))
+    args.name_to_info=name_to_info
     # assert len(name_to_info) == 488
 
     if not os.path.isdir(dump_path):
@@ -189,77 +190,14 @@ if __name__ == "__main__":
     count_finish=0
     print(count_finish)
     for i, (problem_name, info) in tqdm(enumerate(name_to_info.items())):
-
-
-
-        if os.path.exists(generated_json_path):
-            if num_generated.get(problem_name, 0)>=args.n_attempts:
-                # print(num_generated.get(problem_name, 0))
-                count_finish+=1
-                print(count_finish)
-                continue
-            number_of_queries[problem_name]=num_generated.get(problem_name, 0)
-            print(number_of_queries)
-
-
-
         if not problem_name in test_files:
             continue
         print(problem_name)
-        for k in range(args.n_attempts-num_generated.get(problem_name, 0)):
-            problem_name_index = number_of_queries.get(problem_name, 0)
-            temperature = temperature_schedule[problem_name_index]
-            number_of_queries[problem_name] = problem_name_index + 1
-            hashed_id = hash(f"{problem_name}-{problem_name_index}")
-            # if os.path.exists(generated_json_path):
-            #     if problem_name_index < num_generated.get(problem_name, 0):
-            #         continue
-            prompt_sample, sampled_problem_names = get_a_single_sample(
-                info["informal_statement"],
-                info["informal_proof"],
-                info["formal_statement"],
-                get_the_type(problem_name),
-                problem_name,
-                prompts_type=prompts_type,
-                n=args.n_examples,
-                omit_informal_statement=args.omit_informal_statement,
-                omit_informal_proof=args.omit_informal_proof,
-                omit_formal=args.omit_formal,
-                codex_generation=args.codex_generation,
-            )
-            # print(hashed_id)
-            # print(prompt_sample)
-            # print("="*100)
-            # continue
-            prompt_examples = sampled_problem_names
-            generation_params = {
-                "temperature": temperature,
-                "model": args.model,
-                # "max_tokens": 1024,
-                "stop": "Informal",
-                # "request_timeout": 3600,
-            }
-            problem = {
-                "tag": problem_name,
-                "informal_statement": info["informal_statement"],
-                "informal_proof": info["informal_proof"],
-                "formal_statement": info["formal_statement"],
-            }
-            parameters.append(
-                (
-                    problem_name,
-                    prompt_sample,
-                    generation_params,
-                    hashed_id,
-                    prompt_examples,
-                    problem,
-                    dump_path
-                )
-            )
+        parameters.append(problem_name)
     print(f"Number of queries: {len(parameters)}")
     # arg.chunk_size attempts per array job
     all_sub_lists = []
-    for i in range(0, len(parameters), args.chunk_size):
+    for i in range(0, len(parameters)):
         sub_list = parameters[i:i + args.chunk_size]
         all_sub_lists.append(sub_list)
     # assert len(all_sub_lists) < 500, len(all_sub_lists)
@@ -271,21 +209,22 @@ if __name__ == "__main__":
 
     executor = submitit.AutoExecutor(folder=log_path)
     executor.update_parameters(
-        slurm_array_parallelism=20,
+        slurm_array_parallelism=1,
         mem_gb=4,
         cpus_per_task=2,
-        timeout_min=100*args.chunk_size,
+        timeout_min=300*args.chunk_size*args.n_attempts,
         slurm_partition="Theorem_Proving,learnaccel",
         gpus_per_node=0,
     )
     good_count = 0
 
     print(args)
+    os.makedirs(os.path.join(args.dump_path, "success"), exist_ok=True)
     if not os.path.exists(os.path.join(dump_path, "continue.txt")):
         with open(os.path.join(dump_path, "continue.txt"),"w") as f:
             f.write("AAA")
             f.flush()
-    executor.map_array(a_list_of_jobs, all_sub_lists, [args.progress_path]*len(all_sub_lists))
+    executor.map_array(a_single_problem_interact, all_sub_lists, [args.progress_path]*len(all_sub_lists))
 
     # for sub_lists in tqdm(all_sub_lists):
     #     a_list_of_jobs(sub_lists, progress_path, good_count=good_count,length=length)
