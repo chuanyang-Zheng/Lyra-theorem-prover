@@ -1,0 +1,898 @@
+amc12b_2002_p3 number_theory
+Informal:
+(*### Problem
+
+For how many positive integers $n$ is $n^2 - 3n + 2$ a [[prime]] number?
+
+$\mathrm{(A)}\ \text{none}
+\qquad\mathrm{(B)}\ \text{one}
+\qquad\mathrm{(C)}\ \text{two}
+\qquad\mathrm{(D)}\ \text{more\ than\ two,\ but\ finitely\ many}
+\qquad\mathrm{(E)}\ \text{infinitely\ many}$ Show that it is \mathrm{(B)}\ \text{one}.
+
+### Solution
+
+Factoring, we get $n^2 - 3n + 2 = (n-2)(n-1)$. 
+Either $n-1$ or $n-2$ is odd, and the other is even.  
+Their product must yield an even number.  
+imoThe only prime that is even is $2$, which is when $n$ is $3$ or $0$.
+Since $0$ is not a positive number, the answer is $\mathrm{(B)}\ \text{one}$.*)
+
+Formal:
+theorem
+  fixes n ::nat
+  assumes "n>0"
+    and prime:"prime (n^2+2-3*n)"
+  shows "n=3"
+proof -
+  have "n>2" 
+  proof (rule ccontr)
+    assume "\<not> 2 < n"
+    then have "n=1 \<or> n=2" using \<open>n>0\<close> sledgehammer
+    then show False using prime[THEN prime_gt_1_nat]
+      sledgehammer
+  qed
+  (* Factoring, we get $n^2 - 3n + 2 = (n-2)(n-1)$. *)
+  then have "n^2+2-3*n  = (n-1) * (n-2)"
+    unfolding power2_eq_square
+    sledgehammer
+  (* Either $n-1$ or $n-2$ is odd, and the other is even.  
+  Their product must yield an even number.  
+  The only prime that is even is $2$, which is when $n$ is $3$ or $0$. 
+  Since $0$ is not a positive number, the answer is $\mathrm{(B)}\ \text{one}$.*)
+  then have "prime ((n-1) * (n-2))"
+    using prime sledgehammer
+  then have "n-1=1 \<or> n-2 = 1"
+    using prime_product sledgehammer
+  with \<open>n>2\<close>
+  show "n=3" sledgehammer
+qed
+
+amc12a_2013_p7 algebra
+Informal:
+(*### Problem
+
+The sequence $S_1, S_2, S_3, \cdots, S_{10}$ has the property that every term beginning with the third is the sum of the previous two.  That is, $ S_n = S_{n-2} + S_{n-1} \text{ for } n \ge 3. $ Suppose that $S_9 = 110$ and $S_7 = 42$.  What is $S_4$?
+
+$ \textbf{(A)}\ 4\qquad\textbf{(B)}\ 6\qquad\textbf{(C)}\ 10\qquad\textbf{(D)}\ 12\qquad\textbf{(E)}\ 16\qquad $ Show that it is \textbf{(C) }{10}.
+
+### Solution
+
+$S_9 = 110$, $S_7 = 42$
+
+$S_8 = S_9 - S_ 7 = 110 - 42 = 68$
+
+$S_6 = S_8 - S_7 = 68 - 42 = 26$
+
+$S_5 = S_7 - S_6 = 42 - 26 = 16$
+
+$S_4 = S_6 - S_5 = 26 - 16 = 10$
+
+Therefore, the answer is $\textbf{(C) }{10}$*)
+
+Formal:
+theorem
+  fixes s :: "nat \<Rightarrow> real"
+  assumes h0 : "\<And>n. s (n+2) = s (n+1) + s n"
+    and h1 : "s 9 = 110"
+    and h2 : "s 7 = 42"
+  shows "s 4 = 10"
+proof -
+  (* $S_9 = 110$, $S_7 = 42$
+
+  $S_8 = S_9 - S_ 7 = 110 - 42 = 68$ *)
+  have "s 8 = 68" using h1 h2 h0[of 7] sledgehammer
+  (* $S_6 = S_8 - S_7 = 68 - 42 = 26$ *)
+  hence h3: "s 6 = 26" using h2 h0[of 6] sledgehammer
+  (* $S_5 = S_7 - S_6 = 42 - 26 = 16$ *)
+  hence "s 5 = 16" using h2 h0[of 5] sledgehammer
+  (* $S_4 = S_6 - S_5 = 26 - 16 = 10$ *)
+  then show ?thesis using h3 h0[of 4] sledgehammer
+qed
+
+amc12a_2003_p24 algebra
+Informal:
+(*### Problem
+
+If $a\geq b > 1,$ what is the largest possible value of $\log_{a}(a/b) + \log_{b}(b/a)?$
+
+$
+\mathrm{(A)}\ -2      \qquad
+\mathrm{(B)}\ 0     \qquad
+\mathrm{(C)}\ 2      \qquad
+\mathrm{(D)}\ 3      \qquad
+\mathrm{(E)}\ 4
+$ Show that it is \textbf{B}.
+
+### Solution
+
+Using logarithmic rules, we see that
+
+$\log_{a}a-\log_{a}b+\log_{b}b-\log_{b}a = 2-(\log_{a}b+\log_{b}a)$
+$=2-(\log_{a}b+\frac {1}{\log_{a}b})$
+
+Since $a$ and $b$ are both greater than $1$, using [[AM-GM]] gives that the term in parentheses must be at least $2$, so the largest possible values is $2-2=0 \Rightarrow \textbf{B}.$
+
+Note that the maximum occurs when $a=b$.*)
+
+Formal:
+theorem
+  fixes a b::real
+  assumes "b\<le>a"
+    and "1<b"
+  shows "ln (a/b) / ln a + ln (b/a) / ln b \<le>0" (is "?L \<le> _")
+proof -
+  (* Using logarithmic rules, we see that
+
+  $\log_{a}a-\log_{a}b+\log_{b}b-\log_{b}a = 2-(\log_{a}b+\log_{b}a)$
+  $=2-(\log_{a}b+\frac {1}{\log_{a}b})$ *)
+  define x y where "x=ln a" and "y=ln b"
+  have "y>0" using \<open>b>1\<close> unfolding y_def using ln_gt_zero sledgehammer
+  moreover have "x\<ge>y" using \<open>a\<ge>b\<close> unfolding x_def y_def 
+    using assms(2) sledgehammer
+  ultimately have "x>0" sledgehammer
+  have "?L = (x-y)/x + (y-x)/y"
+    apply (subst (1 2) ln_div)
+    using assms unfolding x_def y_def sledgehammer
+  also have "... = 2 - (y/x + x/y)"
+    sledgehammer
+  also have "... \<le> 0"
+  (* Since $a$ and $b$ are both greater than $1$, using [[AM-GM]] gives that the term in parentheses must be at least $2$, so the largest possible values is $2-2=0 \Rightarrow \textbf{B}.$ *)
+  proof -
+    have "0\<le> (sqrt (x/y) - sqrt (y/x))^2"
+      sledgehammer
+    also have "... = y/x + x/y -  2"
+      unfolding power2_eq_square using \<open>x>0\<close> \<open>y>0\<close>
+      sledgehammer
+    finally show ?thesis sledgehammer
+  qed
+  finally show ?thesis .
+qed
+
+mathd_numbertheory_188 number_theory
+Informal:
+(*### Problem
+
+Find the greatest common factor of 180 and 168. Show that it is 12.
+
+### Solution
+
+This is true by simple evaluation.*)
+
+Formal:
+theorem
+  "gcd 180 168 = (12::nat)"
+  sledgehammer
+
+algebra_3rootspoly_amdtamctambeqnasqmbpctapcbtdpasqmbpctapcbta algebra
+Informal:
+(*### Problem
+
+Show that for any four complex numbers a, b, c, and d, $(a-d)(a-c)(a-b) = -(((a^2 - a(b+c)) + bc) * d) + (a^2 - a(b+c) + bc) * a$.
+
+### Solution
+
+We first see that $a^2 = a * a$ trivially.
+Unfolding this, the main equation holds true when terms are rearranged.*)
+
+Formal:
+theorem
+  fixes a b c d :: complex
+  shows "(a-d) * (a-c) * (a-b) = -(((a^2 - (b+c) * a) + c * b) * d) + (a^2 - (b+c) * a + c * b) * a"
+proof -
+  (* We first see that $a^2 = a * a$ trivially. *)
+  have t0: "a^2 = a * a"
+    using power2_eq_square
+      sledgehammer
+  (* Unfolding this, the main equation holds true when terms are rearranged. *)
+  show ?thesis unfolding t0
+    sledgehammer
+qed
+
+mathd_numbertheory_466 number_theory
+Informal:
+(*### Problem
+
+What is the remainder when $1 + 2 + 3 + 4 + \dots + 9 + 10$ is divided by 9? Show that it is 1.
+
+### Solution
+
+This is true by simple evaluation.*)
+
+Formal:
+theorem
+  "(\<Sum> k< 11. k) mod 9 = (1::nat)"
+  sledgehammer
+
+algebra_binomnegdiscrineq_10alt28asqp1 algebra
+Informal:
+(*### Problem
+
+For a positive real number a, show that $10a\leq 28a^2+1$.
+
+### Solution
+
+It suffices to show $0\leq 28a^2 - 10a + 1$.
+First, consider completing the square for $28a^2 - 10a$ and observe that $(a - \frac{5}{28})^2 = a^2 - \frac{10}{28}a + (5/28)^2$.
+Since $0\leq (a - \frac{5}{28})^2$, we have $0\leq a^2 - \frac{10}{28}a + (5/28)^2$.
+Multiplying by 28 and simplifying terms gives $0\leq 28*a^2 - 10*a + (25/28)$.
+Since $25/28 < 1$, the result follows.*)
+
+Formal:
+theorem
+  fixes a :: real
+  shows "10 * a \<le> 28 * a^2 + 1"
+proof -
+(* it suffices to show $0\leq 28a^2 - 10a + 1$ *)
+  have c0: "0 \<le> 28*a^2 - 10*a + 1"
+  proof -
+    (* observe that $(a - \frac{5}{28})^2 = a^2 - \frac{10}{28}a + (5/28)^2$ *)
+    have c1: "(a - (5/28))^2 = a^2 - 10/28*a + (5/28)^2"
+      sledgehammer
+    (* we have $0\leq a^2 - \frac{10}{28}a + (5/28)^2$ *)
+    then have c2: "0 \<le> a^2 - 10/28*a + (5/28)^2" using c1
+      sledgehammer
+    (* Multiplying by 28 and simplifying terms gives $0\leq 28*a^2 - 10*a + (25/28)$ *)
+    then have c3: "0 \<le> 28*a^2 - 10*a + 28*((5/28)^2)" using c2
+      sledgehammer
+    then have c4: "0 \<le> 28*a^2 - 10*a + 28*((5/28)*(5/28))" using c3
+      sledgehammer
+    then have c5: "0 \<le> 28*a^2 - 10*a + (25/28)" using c4
+      sledgehammer
+    (* Since $25/28 < 1$, the result follows. *)
+    then show ?thesis using c5
+      sledgehammer
+  qed
+  then show ?thesis
+    sledgehammer
+qed
+
+mathd_numbertheory_48 number_theory
+Informal:
+(*### Problem
+
+If $321_{b}$ is equal to the base 10 integer 57, find $b$ given that $b>0$. Show that it is 4.
+
+### Solution
+
+Converting $321_{b}$ to base 10 and setting it equal to 57, we find that  \begin{align*} 3(b^2)+2(b^1)+1(b^0)&=57
+\\ 3b^2+2b+1&=57
+\\\Rightarrow\qquad 3b^2+2b-56&=0
+\\\Rightarrow\qquad (3b+14)(b-4)&=0
+\end{align*}This tells us that $b$ is either $-\frac{14}{3}$ or $4$. We know that $b>0$, so $b=4$.*)
+
+Formal:
+theorem
+  fixes b :: real
+  assumes h0 : "0<b"
+    and h1 : "3 * b^2 + 2 * b + 1 = 57"
+  shows "b=4"
+proof -
+  (* Converting $321_{b}$ to base 10 and setting it equal to 57, we find that  \begin{align*} 3(b^2)+2(b^1)+1(b^0)&=57
+  \\ 3b^2+2b+1&=57
+  \\\Rightarrow\qquad 3b^2+2b-56&=0
+  \\\Rightarrow\qquad (3b+14)(b-4)&=0
+  \end{align*} *)
+  have "0 = 3 * b^2 + 2 * b -56" using h1 sledgehammer
+  also have "... = (3*b+14)*(b-4)" sledgehammer
+  finally have "0 = (3*b+14)*(b-4)" sledgehammer
+  (* This tells us that $b$ is either $-\frac{14}{3}$ or $4$. *)
+  then have "b = -14/3 ∨ b=4" sledgehammer
+  (* We know that $b>0$, so $b=4$. *)
+  then show ?thesis using h0 sledgehammer
+qed
+
+end
+
+aime_1984_p5 algebra
+Informal:
+(*### Problem
+
+Determine the value of $ab$ if $\log_8a+\log_4b^2=5$ and $\log_8b+\log_4a^2=7$. Show that it is 512.
+
+### Solution
+
+We first calculate that $\log_2=1$, $\log_4=2$, and $\log_8=3$.
+Then let $c=\log_a$ and $d=\log_b$. We can write the equations as $\frac{c}{3} + 2*\frac{d}{2}=5$ and $\frac{d}{3} + 2*\frac{c}{2}=7$.
+Solving the equations and we get $c=6$ and $d=3$.
+Hence $a=2^6=64$ and $b=2^3=8$. Multiply them together and $ab=512$.
+*)
+
+Formal:
+theorem
+  fixes a b ::real
+  assumes 
+    "a > 0"
+    "b > 0"
+    "(log 2 a) / (log 2 8) + (log 2 (b^2)) / (log 2 4) = 5"
+    "(log 2 b) / (log 2 8) + (log 2 (a^2)) / (log 2 4) = 7"
+  shows "a * b = 512"
+proof -
+  (* We first calculate that $\log_2=1$ and $\log_8=3$. *)
+  have c0: "log 2 2 = 1" sledgehammer
+  have "log 2 8 = log 2 (2^3)" sledgehammer
+  also have "... = 3 * (log 2 2)"
+    sledgehammer
+  also have "... = 3" sledgehammer
+  finally have c1: "log 2 8 = 3" sledgehammer
+  have "log 2 4 = log 2 (2^2)" sledgehammer
+  also have "... = 2 * (log 2 2)"
+    sledgehammer
+  finally have c2: "log 2 4 = 2" sledgehammer
+  (* Then let $c=\log_a$ and $d=\log_b$. We can write the equations as $\frac{c}{3} + 2*\frac{d}{2}=5$ and $\frac{d}{3} + 2*\frac{c}{2}=7$. *)
+  define c d where t0: "c = log 2 a" and t1: "d = log 2 b"
+  have t2: "log 2 (b^2) = 2 * (log 2 b)"
+    sledgehammer
+  have t3: "log 2 (a^2) = 2 * (log 2 a)"
+    sledgehammer
+  have "c / 3 + 2 * d / 2 = 5" using assms(3) unfolding c1 c2 t0 t1 t2 sledgehammer
+  then have c3: "c / 3 + d = 5" sledgehammer
+  have "d / 3 + 2 * c / 2 = 7" using assms(4) unfolding c1 c2 t0 t1 t3 sledgehammer
+  then have c4: "d / 3 + c = 7" sledgehammer
+  (* Solving the equations and we get $c=6$ and $d=3$. 
+  Hence $a=2^6=64$ and $b=2^3=8$. Multiply them together and $ab=512$. *)
+  have "d = 3" using c3 c4 sledgehammer
+  then have "log 2 b = 3" unfolding t1 sledgehammer
+  then have "b = 2^3"
+    sledgehammer
+  then have c5: "b = 8" sledgehammer
+  have "c = 6" using c3 c4 sledgehammer
+  then have "log 2 a = 6" unfolding t0 sledgehammer
+  then have "a = 2^6"
+    sledgehammer
+  then have c6: "a = 64" sledgehammer
+  show ?thesis unfolding c5 c6 sledgehammer
+qed
+
+mathd_numbertheory_335 number_theory
+Informal:
+(*### Problem
+
+When Rachel divides her favorite number by 7, she gets a remainder of 5. What will the remainder be if she multiplies her favorite number by 5 and then divides by 7? Show that it is 4.
+
+### Solution
+
+Let $n$ be Rachel's favorite number. 
+Then $n \equiv 5 \pmod{7}$, so $5n \equiv 5 \cdot 5 \equiv 25 \equiv 4 \pmod{7}$.
+*)
+
+Formal:
+theorem
+  fixes n :: nat
+  assumes h0 : "n mod 7 = 5"
+  shows "(5 * n) mod 7 = 4"
+proof -
+  (* Then $n \equiv 5 \pmod{7}$, so $5n \equiv 5 \cdot 5 \equiv 25 \equiv 4 \pmod{7}$. *)
+  have c0:"(5 * n) mod 7 = (5 * 5) mod 7" using h0
+    sledgehammer
+  then have "\<dots> = 4" sledgehammer
+  then have "(5 * n) mod 7 = 4" using c0 sledgehammer
+  then show ?thesis sledgehammer
+qed
+
+numbertheory_2dvd4expn number_theory
+Informal:
+(*### Problem
+
+Show that for positive integer n, 2 divides $4^n$.
+
+### Solution
+
+Since n is positive, we can find a natural number m where $m+1=n$.
+Then we can show that 2 divides $4^{m+1}$. The conclusion thus follows.*)
+
+Formal:
+theorem
+  fixes n :: nat
+  assumes h0 : "n \<noteq> 0"
+  shows "(2::nat) dvd 4^n"
+proof -
+  obtain m::nat where c0: "m+1=n"
+    sledgehammer
+  have "(2::nat) dvd 4^(m+1)" sledgehammer
+  then show ?thesis unfolding c0 sledgehammer
+qed
+
+algebra_amgm_faxinrrp2msqrt2geq2mxm1div2x algebra
+Informal:
+(*### Problem
+
+For a positive real number x, show that $2 - \sqrt{2} \geq 2 - x - \frac{1}{2x}$.
+
+### Solution
+
+First notice that $2x$ is positive.
+It suffices to show $\sqrt{2} \leq x + \frac{1}{2x}$.
+Let $y = \sqrt{2}$. $y*y = 2$.
+Then $2x*x + 1 - 2x * \sqrt{2} = y*y * x*x + 1 - 2xy = (xy - 1)^2 \geq 0$.
+Also notice that $2x*x + 1 - 2x * \sqrt{2} = 2x * (x + \frac{1}{2x} - \sqrt{2})$.
+Therefore $x + \frac{1}{2x} - \sqrt{2} \geq 0$, given $2x > 0$.
+Rearranging terms, we see that the required inequality holds.
+*)
+
+Formal:
+theorem
+  fixes x :: real
+  assumes "x > 0"
+  shows "2 - sqrt 2 \<ge> 2 - x - 1/ (2 * x)"
+proof -
+  (* First notice that $2x$ is positive. *)
+  have c0: "2 * x > 0" using assms
+    sledgehammer
+  (* It suffices to show $\sqrt{2} \leq x + \frac{1}{2x}$. *)
+  have "sqrt 2 \<le> x + 1 / (2 * x)"
+  proof -
+    (* Let $y = \sqrt{2}$. $y*y = 2$. *)
+    define y where "y = sqrt 2"
+    have c1: "2 = y * y"
+      sledgehammer
+    (* Then $2x*x + 1 - 2x * \sqrt{2} = y*y * x*x + 1 - 2xy = (xy - 1)^2 \geq 0$. *)
+    have "(2 * x) * x + 1 - (2 * x) * (sqrt 2) = (y * y * x * x) + 1 - (2 * x) * y"
+      using c1 y_def sledgehammer
+    also have "... = (y*x) * (y*x) - 2 * (y*x) + 1" sledgehammer
+    also have "... = (y*x - 1) * (y*x - 1)" sledgehammer
+    also have "... \<ge> 0" sledgehammer
+    ultimately have c2: "(2 * x) * x + 1 - (2 * x) * (sqrt 2) \<ge> 0" sledgehammer
+    (* Also notice that $2x*x + 1 - 2x * \sqrt{2} = 2x * (x + \frac{1}{2x} - \sqrt{2})$. *)
+    have "(2*x) * (x + 1/(2*x) - sqrt 2) = (2 * x) * x + (2 * x) * (1/(2*x)) - (2*x) * sqrt 2"
+      sledgehammer
+    also have "... = (2 * x) * x + 1 - (2*x) * sqrt 2" using c0 sledgehammer
+    also have "... \<ge> 0" using c2 sledgehammer
+    ultimately have "(2*x) * (x + 1/(2*x) - sqrt 2) \<ge> 0" sledgehammer
+    (* Therefore $x + \frac{1}{2x} - \sqrt{2} \geq 0$, given $2x > 0$. *)
+    hence "x + 1/(2*x) - sqrt 2 \<ge> 0" using c0
+      sledgehammer
+    (* Rearranging terms, we see that the required inequality holds. *)
+    then show ?thesis sledgehammer
+  qed
+  then show ?thesis sledgehammer
+qed
+
+aimeI_2001_p3 algebra
+Informal:
+(*### Problem
+
+Given that
+
+$$
+\begin{align*}x_{1}&=211,\\
+x_{2}&=375,\\
+x_{3}&=420,\\
+x_{4}&=523,\ \text{and}\\
+x_{n}&=x_{n-1}-x_{n-2}+x_{n-3}-x_{n-4}\ \text{when}\ n\geq5, \end{align*}
+$$
+
+find the value of $x_{531}+x_{753}+x_{975}$. Show that it is 898.
+
+### Solution
+
+We find that $x_5 = 267$ by the recursive formula. Summing the [[recursion]]s
+
+$$\begin{align*}
+x_{n}&=x_{n-1}-x_{n-2}+x_{n-3}-x_{n-4} \\
+x_{n-1}&=x_{n-2}-x_{n-3}+x_{n-4}-x_{n-5}
+\end{align*}$$
+
+yields $x_{n} = -x_{n-5}$. Thus $x_n = (-1)^k x_{n-5k}$. Since $531 = 106 \cdot 5 + 1,\ 753 = 150 \cdot 5 + 3,\ 975 = 194 \cdot 5 + 5$, it follows that
+
+$$x_{531} + x_{753} + x_{975} = (-1)^{106} x_1 + (-1)^{150} x_3 + (-1)^{194} x_5 = 211 + 420 + 267 = 898.$$*)
+
+Formal:
+theorem
+  fixes x :: "nat \<Rightarrow> int"
+  assumes h0 : "x 1 = 211"
+    and h1 : "x 2 = 375"
+    and h2 : "x 3 = 420"
+    and h3 : "x 4 = 523"
+    and h4 : "\<And>(n::nat). ((n\<ge>5) \<Longrightarrow> (x n = x (n-1) - x (n-2) + x (n-3) - x (n-4)))"
+  shows "x 531 + x 753 + x 975 = 898"
+proof -
+  (* $$\begin{align*}
+  x_{n}&=x_{n-1}-x_{n-2}+x_{n-3}-x_{n-4} \\
+  x_{n-1}&=x_{n-2}-x_{n-3}+x_{n-4}-x_{n-5}
+  \end{align*}$$
+  
+  yields $x_{n} = -x_{n-5}$. *)
+  have c0: "\<And>(n::nat). ((n\<ge>5) \<Longrightarrow> (x (n+1) = - x (n-4)))"
+    sledgehammer
+  have c1: "(k \<ge> 1) \<Longrightarrow> (j \<ge> 1) \<Longrightarrow> x (5*(2*k) + j) = x j" for k j
+  proof (induct k)
+    case 0
+    then show ?case sledgehammer
+  next
+    case (Suc k)
+    then show ?case
+    proof -
+      have "5 * (2 * (k+1)) + j = 10* (k+1) + j" sledgehammer
+      also have "... = 10*k + j + 9 + 1" sledgehammer
+      finally have c1: "5 * (2 * (k+1)) + j = 10*k + j + 9 + 1" sledgehammer
+      then have "x (5 * (2 * (k+1)) + j) = x (10*k + j + 9 + 1)" using c1 sledgehammer
+      also have "... = - x (10*k + j + 9 - 4)" using c0[of "10*k + j + 9"] sledgehammer
+      also have "... = - x (10*k + j + 5)"
+        sledgehammer
+      also have "... = - x (10*k + j + 4 + 1)"
+        sledgehammer
+      also have "... = - (- x(10*k + j + 4 -4))"
+      proof -
+        have "10*k + j + 4 \<ge> 5"
+          using Suc.prems(2) sledgehammer
+        then show ?thesis using c0[of "10*k+j+4"] sledgehammer
+      qed
+      also have "... = - (- x (10*k +j))" sledgehammer
+      also have "... = x (10*k+j)" sledgehammer
+      finally have "x (5 * (2 * (k+1)) + j) = x (10*k+j)" sledgehammer
+      then show ?case
+        sledgehammer
+    qed
+  qed
+  then have c2: "\<And>(k::nat). \<And>(j::nat). (k \<ge> 1) \<Longrightarrow> ((j \<ge> 1) \<Longrightarrow>  x (5*(2*k) + j) = x j)"
+    using c1 sledgehammer
+  (* Thus $x_n = (-1)^k x_{n-5k}$. Since $531 = 106 \cdot 5 + 1,\ 753 = 150 \cdot 5 + 3,\ 975 = 194 \cdot 5 + 5$, it follows that
+
+  $$x_{531} + x_{753} + x_{975} = (-1)^{106} x_1 + (-1)^{150} x_3 + (-1)^{194} x_5 = 211 + 420 + 267 = 898.$$*)
+  have "x 531 = x 1" using c2[of "53" "1"] sledgehammer
+  also have "... = 211" using h0 sledgehammer
+  finally have c3: "x 531 = 211" sledgehammer
+  have "x 753 = x 3" using c2[of "75" "3"] sledgehammer
+  also have "... = 420" using h2 sledgehammer
+  finally have c4: "x 753 = 420" sledgehammer
+  have "x 975 = x 5" using c2[of "97" "5"] sledgehammer
+  also have "... = x (5 - 1) - x (5 - 2) + x (5 - 3) - x (5 - 4)" using h4[of "5"] sledgehammer
+  also have "... = x 4 - x 3 + x 2 - x 1" sledgehammer
+  also have "... = 267" unfolding assms by eval
+  finally have c5: "x 975 = 267" sledgehammer
+  show ?thesis unfolding c3 c4 c5 sledgehammer
+qed
+
+numbertheory_3pow2pownm1mod2pownp3eq2pownp2 number_theory
+Informal:
+(*### Problem
+
+Show that for any positive integer $n$, we have $3^{2^n} - 1 \equiv 2^{n+2} \pmod{2^{n+3}}$.
+
+### Solution
+
+We prove by induction on n. The base case is trivial.
+Inductive case: when n is 0 it is also trivial.
+When $n>0$, let $m=2^n$, and we have $3^m - 1 \equiv 4*m \pmod{8*m}$.
+Then there is $k$ where $3^m - 1 = (8*m)*k + 4*m$.
+Let $M = 4*m*k^2+m+4*m*k+k$, and we have $3^{2^{m+1}}-1 = 3^{m*2} - 1 = (3^m)^2-1 = ((8*m)*k + 4*m+1)^2 - 1 = (16*m)*M + 8*m$
+Hence $3^{2^{m+1}}-1 \equiv 8*m \pmod{16*m}$, which unfolds to $(16*m)*M + 8*m \equiv 8*m \pmod{16*m}$.
+Therefore the inductive case holds. Q.E.D.*)
+
+Formal:
+theorem
+  fixes n :: nat
+  assumes "0 < n" 
+  shows "(3^(2^n) - 1) mod (2^(n + 3)) = (2::nat)^(n + 2)"
+  using assms
+proof (induct n)
+  case (Suc n)
+  have ?case when "n=0" 
+    using that sledgehammer
+  moreover have ?case when "n>0"
+  proof -
+    define m::nat where "m = 2^n"
+    have "(3 ^ 2 ^ n - 1) mod 2 ^ (n + 3) = (2::nat)^ (n + 2)"
+      using Suc(1) that sledgehammer
+    then have "(3^m - 1) mod (8*m) = 4*m"
+      unfolding m_def
+      sledgehammer
+    then obtain k where k0:"3^m - 1 = (8*m)*k + 4*m" 
+      sledgehammer
+    define M::nat where "M = 4*m*k^2+m+4*m*k+k"
+    have k: "3^m = (8*m)*k + 4*m +1" 
+    proof -
+      have "3^m\<ge>(1::nat)" sledgehammer
+      then show ?thesis
+        using k0 sledgehammer
+    qed
+    have "3 ^ 2 ^ Suc n - 1 = ((3::nat) ^ (m*2)) - 1"
+      unfolding m_def sledgehammer
+    also have "... = (3 ^ m)\<^sup>2 - 1"
+      unfolding power_mult sledgehammer
+    also have "... = ((8*m)*k + 4*m +1)^2 -1 "
+      unfolding k sledgehammer
+    also have "... = (16*m)*M + 8*m"
+      unfolding M_def sledgehammer
+    finally have "3 ^ 2 ^ Suc n - 1 = (16*m)*M + 8*m" .
+    moreover have "((16*m)*M + 8*m) mod (16*m) = 8*m"
+      sledgehammer
+    then have "((16*m)*M + 8*m) mod 2 ^ (Suc n + 3) = 2 ^ (Suc n + 2)"
+      unfolding m_def sledgehammer
+    ultimately show ?thesis sledgehammer
+  qed
+  ultimately show ?case sledgehammer
+qed simp
+
+mathd_numbertheory_284 number_theory
+Informal:
+(*### Problem
+
+What positive two-digit integer is exactly twice the sum of its digits? Show that it is 18.
+
+### Solution
+
+We simplify $10a + b = 2(a+b)$ to get $8a = b$.
+Since $a$ is at least 1, $b$ is at least 8.
+We know $b$ is 8 since $8a = b$ and $a$ is a natural number.
+Hence $a$ is 1.
+The two-digit integer is hence $18$.
+*)
+
+Formal:
+theorem
+  fixes a b :: nat
+  assumes h0 : "1\<le>a \<and> a \<le>9 \<and> b \<le>9"
+    and h1 : "10 * a + b = 2 * (a+b)"
+  shows "10 * a + b = 18"
+proof -
+  (* We simplify $10a + b = 2(a+b)$ to get $8a = b$. *)
+  have c0: "8 * a = b" using h1 sledgehammer
+  (* Since $a$ is at least 1, $b$ is at least 8. *)
+  hence "b \<ge> 8" using h0 sledgehammer
+  (* We know $b$ is 8 since $8a = b$ and $a$ is a natural number. *)
+  hence c1:"b = 8" using h0 c0
+    sledgehammer
+  (* Hence $a$ is 1. *)
+  hence "a = 1" using c0 sledgehammer
+  (* The two-digit integer is hence $18$. *)
+  then show ?thesis using c1 sledgehammer
+qed
+
+mathd_numbertheory_412 number_theory
+Informal:
+(*### Problem
+
+If $x \equiv 4 \pmod{19}$ and $y \equiv 7 \pmod{19}$, then find the remainder when $(x + 1)^2 (y + 5)^3$ is divided by 19. Show that it is 13.
+
+### Solution
+
+If $x \equiv 4 \pmod{19}$ and $y \equiv 7 \pmod{19}$, then \begin{align*}
+(x + 1)^2 (y + 5)^3 &\equiv 5^2 \cdot 12^3 \\
+&\equiv 25 \cdot 1728 \\
+&\equiv 6 \cdot 18 \\
+&\equiv 108 \\
+&\equiv 13 \pmod{19}.
+\end{align*}*)
+
+Formal:
+theorem
+  fixes x y :: nat
+  assumes h0 : "x mod 19 = (4:: nat)"
+    and h1 : "y mod 19 = (7:: nat)"
+  shows "(x+1)^2 * (y+5)^3 mod 19 = (13:: nat)"
+proof -
+  (* (x + 1)^2 (y + 5)^3 &\equiv 5^2 \cdot 12^3 
+  &\equiv 6 \cdot 18 *)
+  have "(x+1) mod 19 = 5" using h0
+    sledgehammer
+  then have "(x+1)^2 mod 19 = 5^2 mod 19"
+    sledgehammer
+  also have "... = 6" sledgehammer
+  finally have c0: "(x+1)^2 mod 19 = 6" sledgehammer
+  have "(y+5) mod 19 = (7+5) mod 19" using h1
+    sledgehammer
+  also have "... = 12" sledgehammer
+  finally have "(y+5) mod 19 = 12" sledgehammer
+  then have "(y+5)^3 mod 19 = 12^3 mod 19"
+    sledgehammer
+  also have "... = 18" sledgehammer
+  finally have c1: "(y+5)^3 mod 19 = 18" sledgehammer
+  have "(x+1)^2 * (y+5)^3 mod 19 = ((x+1)^2 mod 19) * ((y+5)^3 mod 19) mod 19"
+    sledgehammer
+  also have "... = 6 * 18 mod 19" unfolding c0 c1 sledgehammer
+  (* &\equiv 13 *)
+  also have "... = 13" sledgehammer
+  finally show ?thesis sledgehammer
+qed
+
+aime_1983_p9 algebra
+Informal:
+(*### Problem
+
+Find the minimum value of $\frac{9x^2\sin^2 x + 4}{x\sin x}$ for $0 < x < \pi$. Show that it is 12.
+
+### Solution
+
+Let $y = x \sin x$. It suffices to show that $12 \leq \frac{9y^2 + 4}{y}.
+It is trivial to see that $y > 0$. 
+Then one can multiply both sides by $y$ and it suffices to show $12y \leq 9y^2 + 4$.
+This can be done by the sum of squares method.*)
+
+Formal:
+theorem
+  fixes x::real
+  assumes "0<x" "x<pi"
+  shows "12 \<le> ((9 * (x^2 * (sin x)^2)) + 4) / (x * sin x)"
+proof -
+  (* Let $y = x \sin x$. *)
+  define y where "y=x * sin x"
+  (* It suffices to show that $12 \leq \frac{9y^2 + 4}{y}. *)
+  have "12 \<le> (9 * y^2 + 4) / y"
+  proof -
+    (* It is trivial to see that $y > 0$. *)
+    have c0: "y > 0"
+      sledgehammer
+    (* Then one can multiply both sides by $y$ and it suffices to show $12y \leq 9y^2 + 4$. *)
+    have "(9 * y^2 + 4) \<ge> 12 * y" 
+      sledgehammer
+    then show ?thesis
+      sledgehammer
+  qed
+  then show ?thesis
+    sledgehammer
+qed
+
+algebra_2rootsintpoly_am10tap11eqasqpam110 algebra
+Informal:
+(*### Problem
+
+Show that for any complex number a, $(a-10)(a+11) = a^2 + a - 110$.
+
+### Solution
+
+We first expand all terms of the left hand side to get $a^2 - 10a + 11a - 10*11$.
+This equals $a^2 + a - 10*11 = a^2 + a - 110$.*)
+
+Formal:
+theorem
+  fixes a :: complex
+  shows "(a-10) * (a+11) = a^2 + a -110"
+proof -
+  (* We first expand all terms of the left hand side to get $a^2 - 10a + 11a - 10*11$. *)
+  have "(a-10) * (a+11) = a^2 - 10*a + 11*a - 10 *11"
+    sledgehammer
+  (* This equals $a^2 + a - 10*11 = a^2 + a - 110$. *)
+  also have "\<dots> = a^2 + a - 10 * 11"
+    sledgehammer
+  also have "\<dots> = a^2 + a - 110"
+    sledgehammer
+  finally show ?thesis
+    sledgehammer
+qed
+
+aimeI_2000_p7 algebra
+Informal:
+(*### Problem
+
+Suppose that $x,$ $y,$ and $z$ are three positive numbers that satisfy the equations $xyz = 1,$ $x + \frac {1}{z} = 5,$ and $y + \frac {1}{x} = 29.$ Then $z + \frac {1}{y} = \frac {m}{n},$ where $m$ and $n$ are [[relatively prime]] positive integers. Find $m + n$. Show that it is 5.
+
+
+note: this is the type of problem that makes you think symmetry, but actually can be solved easily with substitution, and other normal technniques
+
+### Solution
+
+We can rewrite $xyz=1$ as $\frac{1}{z}=xy$.
+
+Substituting into one of the given equations, we have 
+$x+xy=5$
+$x(1+y)=5$
+$\frac{1}{x}=\frac{1+y}{5}.$
+
+We can substitute back into $y+\frac{1}{x}=29$ to obtain
+$y+\frac{1+y}{5}=29$
+$5y+1+y=145$
+$y=24.$
+
+We can then substitute once again to get
+$x=\frac15$
+$z=\frac{5}{24}.$
+Thus, $z+\frac1y=\frac{5}{24}+\frac{1}{24}=\frac{1}{4}$, so $m+n=005$.*)
+
+Formal:
+theorem
+  fixes x y z :: real
+    and p :: rat
+  assumes "0 < x \<and> 0 < y \<and> 0 < z"
+    and "x * y * z = 1"
+    and "x + 1 / z = 5"
+    and "y + 1 / x = 29"
+    and "z + 1 / y = p"
+    and "0 < p" 
+  shows "let (m,n) = quotient_of p in m + n = 5"
+proof -
+  (* We can rewrite $xyz=1$ as $\frac{1}{z}=xy$. *)
+  have c0: "z = 1 / (x*y)"
+    sledgehammer
+  (* Substituting into one of the given equations, we have 
+  $x+xy=5$
+  $x(1+y)=5$
+  $\frac{1}{x}=\frac{1+y}{5}.$ *)
+  have c1: "1 / x = (1+y) / 5" 
+  proof -
+    have "x + x * y = 5" using assms(3) unfolding c0
+      sledgehammer
+    then have "x * (1 + y) = 5"
+      sledgehammer
+    then have t1: "x = 5 / (1+y)"
+      sledgehammer
+    then show ?thesis
+      sledgehammer
+  qed
+  (* We can substitute back into $y+\frac{1}{x}=29$ to obtain
+  $y+\frac{1+y}{5}=29$
+  $5y+1+y=145$
+  $y=24.$ *)
+  have "y + (1+y)/5 = 29" using assms(4) unfolding c1 sledgehammer
+  then have "5* (y + (1+y)/5) = 5 * 29" sledgehammer
+  also have "... = 145" sledgehammer
+  finally have c2_1: "5* (y + (1+y)/5) = 145" sledgehammer
+  have "5* (y + (1+y)/5) = 5*y + (1+y)" sledgehammer
+  also have "... = 6*y + 1" sledgehammer
+  finally have c2_2: "5* (y + (1+y)/5) = 6*y + 1" sledgehammer
+  have "6*y + 1 = 145" using c2_1 c2_2 sledgehammer
+  then have c2: "y = 24" sledgehammer
+  (* We can then substitute once again to get
+  $x=\frac15$
+  $z=\frac{5}{24}.$ *)
+  have "1/x = 5" using c1 unfolding c2 sledgehammer
+  then have c3: "x = 1/5"
+    sledgehammer
+  then have c4: "z = 5/24"
+    sledgehammer
+  (* Thus, $z+\frac1y=\frac{5}{24}+\frac{1}{24}=\frac{1}{4}$, so $m+n=005$. *)
+  have "p = z + 1/y" using assms(5) sledgehammer
+  also have "... = 5/24 + 1/24" unfolding c2 c4 sledgehammer
+  also have "... = 1/4" sledgehammer
+  finally have c5: "p = 1/4"
+    sledgehammer
+  have "quotient_of p = (1, 4)" unfolding c5 sledgehammer
+  then show ?thesis sledgehammer
+qed
+
+numbertheory_sqmod3in01d number_theory
+Informal:
+(*### Problem
+
+Show that for any integer, the residue of its square divided by 3 is either 0 or 1.
+
+### Solution
+
+Let $a$ stand for this arbitrary integer. Let $b = a mod 3$.
+We know that b can only be 0, 1, or 2.
+Also, $a^2 mod 3 = b^2 mod 3$.
+If $b=0$, $a^2 mod 3 = 0^2 mod 3 = 0$;
+If $b=1$, $a^2 mod 3 = 1^2 mod 3 = 1$;
+If $b=2$, $a^2 mod 3 = 2^2 mod 3 = 1$.*)
+
+Formal:
+theorem
+  fixes a :: int
+  shows "a^2 mod 3 = 0 \<or> a^2 mod 3 = 1"
+proof -
+  (* Let $b = a mod 3$. *)
+  obtain b::int where c0: "b = a mod 3" sledgehammer
+  (* We know that b can only be 0, 1, or 2. *)
+  have c1: "b \<ge> 0 \<and> b \<le> 2"
+    sledgehammer
+  (* Also, $a^2 mod 3 = b^2 mod 3$. *)
+  hence c2: "a^2 mod 3 = b^2 mod 3" using c0
+    sledgehammer
+  then show ?thesis
+  (* If $b=0$, $a^2 mod 3 = 0^2 mod 3 = 0$;
+  If $b=1$, $a^2 mod 3 = 1^2 mod 3 = 1$;
+  If $b=2$, $a^2 mod 3 = 2^2 mod 3 = 1$.*)
+  proof (cases "b=0")
+    case True
+    have "a^2 mod 3 = 0" using True c0 sledgehammer
+    then show ?thesis sledgehammer
+  next
+    case c3: False
+    then show ?thesis
+    proof (cases "b=1")
+      case True
+      have "a^2 mod 3 = 1" using True c0
+        sledgehammer
+      then show ?thesis sledgehammer
+    next
+      case False
+      have "b = 2" using c1 c3 False sledgehammer
+      hence "a^2 mod 3 = 2^2 mod 3" using c2 sledgehammer
+      also have "... = 1" sledgehammer
+      finally have "a^2 mod 3 = 1" sledgehammer
+      then show ?thesis sledgehammer
+    qed
+  qed
+qed
+
